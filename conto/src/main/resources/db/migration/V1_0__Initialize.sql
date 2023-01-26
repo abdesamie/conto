@@ -17,6 +17,7 @@ CREATE TABLE account (
   owner           VARCHAR_IGNORECASE(50),
   description     VARCHAR(64) NOT NULL,
   minimum_balance BIGINT      NOT NULL,
+  balance BIGINT  DEFAULT(100),
   FOREIGN KEY (owner) REFERENCES user (username)
 );
 

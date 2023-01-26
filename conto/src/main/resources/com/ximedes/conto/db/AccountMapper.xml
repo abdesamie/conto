@@ -9,6 +9,7 @@
             <arg column="owner" javaType="string"/>
             <arg column="description" javaType="string"/>
             <arg column="minimum_balance" javaType="_long"/>
+            <arg column="balance" javaType="_long" />
         </constructor>
     </resultMap>
 
@@ -39,8 +40,17 @@
         UPDATE account
         SET description = #{description},
         owner = #{owner},
-        minimum_balance = #{minimumBalance}
+        minimum_balance = #{minimumBalance},
+        balance = #{balance}
         WHERE account_id = #{accountID}
+    </update>
+
+    <update id="updateAccountBalance">
+        SELECT * FROM account WHERE account_id = #{accountID} FOR UPDATE;
+        UPDATE account
+        SET
+        balance = balance + #{amount}
+        WHERE account_id = #{accountID};
     </update>
 
 </mapper>

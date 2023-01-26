@@ -69,5 +69,11 @@ class AccountService(private val accountMapper: AccountMapper,
 
     fun findByOwner(user: String) = accountMapper.find(AccountCriteria(ownerID = user))
 
+    fun updateBalanceForDebtorAndCreditor(debitAccountID: String, creditAccountID: String, amount: Long) {
+        accountMapper.updateAccountBalance(debitAccountID, -amount)
+
+        accountMapper.updateAccountBalance(creditAccountID, amount)
+    }
+
 
 }

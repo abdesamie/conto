@@ -33,14 +33,9 @@ class TransferServiceTest {
             owner = user.username
         }
         val creditAccount = AccountBuilder.build()
+        debitAccount.balance = 150
         whenever(accountService.findByAccountID(debitAccount.accountID)).thenReturn(debitAccount)
         whenever(accountService.findByAccountID(creditAccount.accountID)).thenReturn(creditAccount)
-
-        // Balance is 150, so should succeed
-        whenever(transferMapper.findTransfersByAccountID(debitAccount.accountID)).thenReturn(listOf(TransferBuilder.build {
-            creditAccountID = debitAccount.accountID
-            amount = 150
-        }))
 
         val t = transferService.attemptTransfer(debitAccount.accountID, creditAccount.accountID, 100, "desc")
         verify(transferMapper).insertTransfer(t)
@@ -50,11 +45,7 @@ class TransferServiceTest {
         assertEquals(100, t.amount)
         assertEquals("desc", t.description)
 
-        // Balance is 50, so should fail
-        whenever(transferMapper.findTransfersByAccountID(debitAccount.accountID)).thenReturn(listOf(TransferBuilder.build {
-            creditAccountID = debitAccountID
-            amount = 50
-        }))
+        debitAccount.balance = 50
 
         assertThrows<InsufficientFundsException> {
             transferService.attemptTransfer(debitAccount.accountID, creditAccount.accountID, 100, "desc")
@@ -164,27 +155,15 @@ class TransferServiceTest {
         val (accountA, accountB, accountC) = AccountBuilder.build(3) {
             owner = user.username
         }
+
+        accountA.balance = -300
+        accountB.balance = 225
+        accountC.balance = 75
+
         whenever(accountService.findByAccountID(accountA.accountID)).thenReturn(accountA)
         whenever(accountService.findByAccountID(accountB.accountID)).thenReturn(accountB)
         whenever(accountService.findByAccountID(accountC.accountID)).thenReturn(accountC)
 
-        val txAtoB = (1..100).map {
-            TransferBuilder.build {
-                debitAccountID = accountA.accountID
-                creditAccountID = accountB.accountID
-                amount = 3
-            }
-        }
-        val txBtoC = (1..75).map {
-            TransferBuilder.build {
-                debitAccountID = accountB.accountID
-                creditAccountID = accountC.accountID
-                amount = 1
-            }
-        }
-        whenever(transferMapper.findTransfersByAccountID(accountA.accountID)).thenReturn(txAtoB)
-        whenever(transferMapper.findTransfersByAccountID(accountB.accountID)).thenReturn(txAtoB + txBtoC)
-        whenever(transferMapper.findTransfersByAccountID(accountC.accountID)).thenReturn(txBtoC)
 
         assertEquals(-300, transferService.findBalance(accountA.accountID))
         assertEquals(225, transferService.findBalance(accountB.accountID))
